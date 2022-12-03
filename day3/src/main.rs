@@ -47,8 +47,6 @@ fn second_part(lines: Vec<String>) -> isize {
                 1 + c as u32 - 'a' as u32
             }
         }
-
-        // let [a, b, c]: [String; String, String] = group.try_into().unwrap();
     }
 
     total.try_into().unwrap()

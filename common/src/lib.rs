@@ -16,3 +16,15 @@ where
     let file = File::open(filename).unwrap();
     io::BufReader::new(file).lines()
 }
+
+// Read file lines into a vector.
+pub fn read_lines_vec<P>(filename: P) -> Vec<String>
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filename).unwrap();
+    io::BufReader::new(file)
+        .lines()
+        .collect::<Result<Vec<String>, _>>()
+        .unwrap()
+}

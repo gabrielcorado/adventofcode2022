@@ -60,60 +60,52 @@ fn first_part(lines: Vec<String>) -> isize {
 }
 
 fn second_part(lines: Vec<String>) -> isize {
-    let (candidates, end, map): (Vec<(usize, usize)>, (usize, usize), Vec<Vec<usize>>) = lines
-        .iter()
-        .enumerate()
-        .fold((Vec::new(), (0, 0), Vec::new()), |mut acc, (i, l)| {
-            let mut line = Vec::new();
-            let mut end_point = acc.1;
-            for (j, c) in l.chars().enumerate() {
-                let height = char_to_usize(c);
-                if c == 'S' || c == 'a' {
-                    acc.0.push((i, j));
-                } else if c == 'E' {
-                    end_point = (i, j)
-                }
-                line.push(height);
-            }
-
-            acc.2.push(line);
-            (acc.0, end_point, acc.2)
-        });
-
-    candidates
-        .iter()
-        .map(|start| {
-            let rows = map.len();
-            let cols = map[0].len();
-            let mut visited: HashSet<(usize, usize)> = HashSet::new();
-            let mut queue: VecDeque<(usize, usize)> = once(*start).collect();
-            let mut dist: HashMap<(usize, usize), usize> = once((*start, 0)).collect();
-
-            while let Some(curr @ (x, y)) = queue.pop_front() {
-                if !visited.insert(curr) {
-                    continue;
-                }
-
-                // Found it?
-                if curr == end {
-                    break;
-                }
-
-                for neighbour in get_neighbours(x, y, rows, cols) {
-                    let height = map[neighbour.0][neighbour.1];
-                    if height <= map[x][y] + 1 {
-                        let curr_dist = dist[&curr];
-                        dist.insert(neighbour, curr_dist + 1);
-                        queue.push_back(neighbour);
+    let (end, map): ((usize, usize), Vec<Vec<usize>>) =
+        lines
+            .iter()
+            .enumerate()
+            .fold(((0, 0), Vec::new()), |mut acc, (i, l)| {
+                let mut line = Vec::new();
+                let mut end_point = acc.0;
+                for (j, c) in l.chars().enumerate() {
+                    let height = char_to_usize(c);
+                    if c == 'E' {
+                        end_point = (i, j)
                     }
+                    line.push(height);
                 }
-            }
 
-            dist.get(&end).copied()
-        })
-        .filter_map(|r| r)
-        .min()
-        .unwrap() as isize
+                acc.1.push(line);
+                (end_point, acc.1)
+            });
+
+    let rows = map.len();
+    let cols = map[0].len();
+    let mut visited: HashSet<(usize, usize)> = HashSet::new();
+    let mut queue: VecDeque<(usize, usize)> = once(end).collect();
+    let mut dist: HashMap<(usize, usize), usize> = once((end, 0)).collect();
+
+    while let Some(curr @ (x, y)) = queue.pop_front() {
+        if !visited.insert(curr) {
+            continue;
+        }
+
+        // Find any 'a' or 'S'.
+        if map[x][y] == 0 {
+            return dist[&curr] as isize;
+        }
+
+        for neighbour in get_neighbours(x, y, rows, cols) {
+            let height = map[neighbour.0][neighbour.1];
+            if height >= map[x][y] - 1 {
+                let curr_dist = dist[&curr];
+                dist.insert(neighbour, curr_dist + 1);
+                queue.push_back(neighbour);
+            }
+        }
+    }
+
+    -1
 }
 
 fn get_neighbours(x: usize, y: usize, max_x: usize, max_y: usize) -> Vec<(usize, usize)> {
